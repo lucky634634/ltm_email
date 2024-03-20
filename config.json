@@ -1,0 +1,13 @@
+{
+	"General": {
+		"Autoload": 10,
+		"Email": "a@a.c",
+		"MailServer": "127.0.0.1",
+		"Name": "a",
+		"Password": "123456",
+		"Port": {
+			"POP3": 2222,
+			"SMTP": 3333
+		}
+	}
+}
