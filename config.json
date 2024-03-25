@@ -6,8 +6,36 @@
 		"Name": "a",
 		"Password": "123456",
 		"Port": {
-			"POP3": 2222,
-			"SMTP": 3333
+			"POP3": 3335,
+			"SMTP": 2225
 		}
+	},
+	"Filter": {
+		"User": [
+			{
+				"From": [
+					"b@a.c"
+				],
+				"To": "b"
+			}
+		],
+		"Subbject": [
+			{
+				"From": [
+					"a"
+				],
+				"To": "a"
+			}
+		],
+		"Content": [],
+		"Spam": [
+			{
+				"From": [
+					"virus",
+					"spam"
+				],
+				"To": "Spam"
+			}
+		]
 	}
 }

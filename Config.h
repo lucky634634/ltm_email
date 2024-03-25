@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CONFIG_H
+#define CONFIG_H
 #include <iostream>
 #include <fstream>
 #include <jsoncpp/json/json.h>
@@ -12,7 +13,8 @@ public:
 private:
     Config();
     static Config* instance;
-private:
+public:
+    // General
     std::string name;
     std::string email;
     std::string password;
@@ -20,4 +22,12 @@ private:
     int portSMTP;
     int portPOP3;
     int autoload;
+
+    // Filter
+    std::map <std::string, std::vector<std::string>> userFilter;
+    std::map <std::string, std::vector<std::string>> subbjectFilter;
+    std::map <std::string, std::vector<std::string>> contentFilter;
+    std::map <std::string, std::vector<std::string>> spamFilter;
 };
+
+#endif
