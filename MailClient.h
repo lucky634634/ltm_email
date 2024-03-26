@@ -9,7 +9,7 @@
 #include <cstring>
 #include <thread>
 #include "Config.h"
-#include "MailManager.h"
+#include "Mail.h"
 
 #define MAX_BUFFER_SIZE 1024
 
@@ -25,23 +25,12 @@ private:
     void Loop();
     void SendEmail();
     void ViewEmail();
-    struct addrinfo* Getaddrinfo(int port);
-
-    void ConnectSTMP();
-    void ConnectPOP3();
 
 private:
     bool m_isRunning;
     Config* config;
-    MailManager* mailmanager;
 
-    int m_socket;
-
-    struct addrinfo* m_addrSTMP;
-    struct addrinfo* m_addrPOP3;
-
-    char m_buffer[MAX_BUFFER_SIZE];
-    std::thread m_autoload;
+    std::vector<Mail> mailList;
 };
 
 #endif

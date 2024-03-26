@@ -10,9 +10,9 @@ class Mail
 public:
     Mail();
     ~Mail();
-    void Save();
-    void Load();
-    void Convert(std::vector<char> buffer);
+    void Convert(std::string buffer);
+
+    friend std::ostream& operator<<(std::ostream& os, const Mail& mail);
 
 public:
     bool isSeen;
@@ -20,7 +20,8 @@ public:
     std::string folder;
     std::string user;
     std::string subject;
-    std::vector<char> content;
+    std::string content;
+    std::map<std::string, std::string> attachments;
 };
 
 #endif

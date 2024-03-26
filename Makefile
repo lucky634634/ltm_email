@@ -2,11 +2,11 @@ CC = g++
 CFlAGS = -g -I. -c -Wall
 LFLAGS = -g -Wall
 
-SRCS = main.cpp Config.cpp MailClient.cpp Mail.cpp MailManager.cpp
-OBJS = main.o Config.o MailClient.o Mail.o MailManager.o
+SRCS = main.cpp Config.cpp MailClient.cpp Mail.cpp
+OBJS = main.o Config.o MailClient.o Mail.o
 EXE = main
 BUILD_DIR = ./build
-LIBS = -ljsoncpp -lpthread -lboost_filesystem
+LIBS = -ljsoncpp -lpthread
 
 all: $(OBJS)
 	cd $(BUILD_DIR) && $(CC) $(LFLAGS) -o $(EXE) $(OBJS) $(LIBS)
@@ -26,11 +26,8 @@ MailClient.o: $(BUILD_DIR) MailClient.cpp
 Mail.o: $(BUILD_DIR) Mail.cpp
 	$(CC) $(CFlAGS) -o $(BUILD_DIR)/Mail.o Mail.cpp
 
-MailManager.o: $(BUILD_DIR) MailManager.cpp
-	$(CC) $(CFlAGS) -o $(BUILD_DIR)/MailManager.o MailManager.cpp
-
 run: all
 	$(BUILD_DIR)/$(EXE)
 
 clean:
-	cd $(BUILD_DIR) && rm $(OBJS) $(EXE)
+	rm -rf $(BUILD_DIR)

@@ -2,4 +2,3 @@
 *.o
 
 /[Dd]ebug/
-!./[Dd]ebug/config.json
