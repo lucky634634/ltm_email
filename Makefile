@@ -6,7 +6,7 @@ SRCS = main.cpp Config.cpp MailClient.cpp Mail.cpp
 OBJS = main.o Config.o MailClient.o Mail.o
 EXE = main
 BUILD_DIR = ./build
-LIBS = -ljsoncpp -lpthread
+LIBS = -ljsoncpp -lpthread -lboost_system -lboost_filesystem -lboost_regex
 
 all: $(OBJS)
 	cd $(BUILD_DIR) && $(CC) $(LFLAGS) -o $(EXE) $(OBJS) $(LIBS)

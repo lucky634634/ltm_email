@@ -62,5 +62,26 @@ void MailClient::SendEmail()
 
 void MailClient::ViewEmail()
 {
+    for (size_t i = 0; i < mailList.size(); i++)
+    {
+        std::cout << i << ". " << mailList[i] << std::endl;
+    }
+}
 
+void MailClient::ReadMail(size_t index)
+{
+    std::cout << mailList[index] << std::endl;
+    if (mailList[index].attachments.size() > 0)
+    {
+        std::cout << "Danh sách attached files: " << std::endl;
+        for (auto& attachment : mailList[index].attachments)
+        {
+            std::cout << attachment.first << std::endl;
+        }
+        std::cout << "Chọn đường dẫn lưu file: ";
+
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::string choice;
+        std::getline(std::cin, choice);
+    }
 }

@@ -4,6 +4,11 @@
 #include <string>
 #include <vector>
 #include <jsoncpp/json/json.h>
+#include <boost/filesystem.hpp>
+#include <boost/beast/core/detail/base64.hpp>
+
+namespace fs = boost::filesystem;
+namespace detail = boost::beast::detail;
 
 class Mail
 {
@@ -11,8 +16,12 @@ public:
     Mail();
     ~Mail();
     void Convert(std::string buffer);
+    void SaveAttachment(size_t index, std::string path);
 
     friend std::ostream& operator<<(std::ostream& os, const Mail& mail);
+
+    static std::string EncodeBase64(const std::vector<char>& data);
+    static std::vector<char> DecodeBase64(const std::string& encoded_string);
 
 public:
     bool isSeen;

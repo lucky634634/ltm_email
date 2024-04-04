@@ -25,6 +25,7 @@ private:
     void Loop();
     void SendEmail();
     void ViewEmail();
+    void ReadMail(size_t index);
 
 private:
     bool m_isRunning;
