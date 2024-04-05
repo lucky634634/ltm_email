@@ -22,6 +22,7 @@ public:
 
     static std::string EncodeBase64(const std::vector<char>& data);
     static std::vector<char> DecodeBase64(const std::string& encoded_string);
+    void Save(std::string mainPath);
 
 public:
     bool isSeen;

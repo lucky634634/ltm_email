@@ -8,10 +8,12 @@
 #include <cstdlib>
 #include <cstring>
 #include <thread>
+#include <boost/filesystem.hpp>
 #include "Config.h"
 #include "Mail.h"
 
 #define MAX_BUFFER_SIZE 1024
+#define fs boost::filesystem
 
 class MailClient
 {
@@ -26,12 +28,21 @@ private:
     void SendEmail();
     void ViewEmail();
     void ReadMail(size_t index);
+    bool CreatePop3Socket();
+    void ClosePop3Socket();
+    void LoadMailList();
+    size_t GetMailCount();
+    std::vector<std::string> GetMailIDs();
+    void SaveMailList();
 
 private:
     bool m_isRunning;
     Config* config;
 
-    std::vector<Mail> mailList;
+    std::vector<Mail> m_mailList;
+
+    int m_pop3Socket;
+    int m_smtpSocket;
 };
 
 #endif
