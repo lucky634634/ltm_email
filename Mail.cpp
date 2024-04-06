@@ -134,7 +134,7 @@ std::string Mail::ExtractText(const std::string& mimeMessage)
     size_t textStart = mimeMessage.find("Content-Type: text/plain");
     if (textStart != std::string::npos)
     {
-        size_t textEnd = mimeMessage.find("--", textStart + 1);
+        size_t textEnd = mimeMessage.find("\r\n\r\n--", textStart + 1);
         if (textEnd != std::string::npos)
         {
             size_t contentStart = mimeMessage.find("\r\n\r\n", textStart) + 4; // Find the start of content after the headers
