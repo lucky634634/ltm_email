@@ -543,9 +543,18 @@ void MailClient::SendMail(std::string to, std::string cc, std::string bcc, std::
     }
 
     msg = "From: " + config->email + "\r\n";
-    msg += "To: " + to + "\r\n";
-    msg += "Cc: " + cc + "\r\n";
-    msg += "Bcc: " + bcc + "\r\n";
+    if (!to.empty())
+    {
+        msg += "To: " + to + "\r\n";
+    }
+    if (!cc.empty())
+    {
+        msg += "Cc: " + cc + "\r\n";
+    }
+    if (!bcc.empty())
+    {
+        msg += "Bcc: " + bcc + "\r\n";
+    }
     msg += "Subject: " + subject + "\r\n";
     msg += "MIME-Version: 1.0\r\n";
     if (attachments.size() > 0)
@@ -623,6 +632,7 @@ void MailClient::SendMail(std::string to, std::string cc, std::string bcc, std::
         std::cout << "Error sending data" << std::endl;
         return;
     }
+    std::cout << "Gửi email thành công" << std::endl;
     close(m_smtpSocket);
 }
 
