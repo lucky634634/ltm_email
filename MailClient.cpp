@@ -64,6 +64,12 @@ void MailClient::SendEmail()
     std::string to;
     std::cin.ignore();
     std::getline(std::cin, to);
+    std::string cc;
+    std::cout << "CC: ";
+    std::getline(std::cin, cc);
+    std::string bcc;
+    std::cout << "BCC: ";
+    std::getline(std::cin, bcc);
     std::string subject;
     std::cout << "Subject: ";
     std::getline(std::cin, subject);
@@ -109,7 +115,7 @@ void MailClient::SendEmail()
         }
     }
 
-    SendMail(to, subject, content, attachments);
+    SendMail(to, cc, bcc, subject, content, attachments);
 }
 
 void MailClient::ViewEmails()
@@ -477,7 +483,7 @@ void MailClient::ViewMailFolder(std::string folder)
     }
 }
 
-void MailClient::SendMail(std::string to, std::string subject, std::string message, std::vector<std::string> attachments)
+void MailClient::SendMail(std::string to, std::string cc, std::string bcc, std::string subject, std::string message, std::vector<std::string> attachments)
 {
     if (!CreateSmtpSocket())
     {
@@ -538,6 +544,8 @@ void MailClient::SendMail(std::string to, std::string subject, std::string messa
 
     msg = "From: " + config->email + "\r\n";
     msg += "To: " + to + "\r\n";
+    msg += "Cc: " + cc + "\r\n";
+    msg += "Bcc: " + bcc + "\r\n";
     msg += "Subject: " + subject + "\r\n";
     msg += "MIME-Version: 1.0\r\n";
     if (attachments.size() > 0)

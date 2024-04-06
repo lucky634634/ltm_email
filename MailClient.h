@@ -39,7 +39,7 @@ private:
     void FilterMail(Mail& mail);
     std::vector<std::string> GetFolders();
     void ViewMailFolder(std::string folder);
-    void SendMail(std::string to, std::string subject, std::string message, std::vector<std::string> attachments = std::vector<std::string>());
+    void SendMail(std::string to, std::string cc, std::string bcc, std::string subject, std::string message, std::vector<std::string> attachments = std::vector<std::string>());
     bool CreateSmtpSocket();
     void CloseSmtpSocket();
     long long GetFileSize(std::string filePath);
