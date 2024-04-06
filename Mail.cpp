@@ -5,7 +5,7 @@
 Mail::Mail()
 {
     isSeen = false;
-    folder = "";
+    folder = "Inbox";
     user = "";
     subject = "";
 }
@@ -21,40 +21,8 @@ void Mail::Convert(std::string buffer)
     subject = buffer.substr(buffer.find("Subject: ") + 9);
     subject = subject.substr(0, subject.find("\r\n"));
 
-    // Check if it has attachments
-    if (buffer.find("boundary") != std::string::npos)
-    {
-        // Get boundary
-        std::string boundary = buffer.substr(buffer.find("boundary=\"") + 10, buffer.find("\"\r\n") - buffer.find("boundary=\"") - 10);
-        boundary = boundary.substr(boundary.find_last_of("-") + 1);
-
-        buffer = buffer.substr(buffer.find(boundary + "\r\n") + boundary.size() + 2);
-
-        // Get mail content
-        content = buffer.substr(buffer.find("7bit\r\n\r\n") + 8, buffer.find(boundary) - buffer.find("7bit\r\n\r\n") - 8);
-
-        content = content.substr(0, content.find("\r\n"));
-        // Get attachments
-        do
-        {
-            buffer = buffer.substr(buffer.find(boundary + "\r\n") + boundary.size() + 2);
-            if (buffer.find("name=") == std::string::npos)
-            {
-                break;
-            }
-            std::string fileName = buffer.substr(buffer.find("name=\"") + 6, buffer.find("\"\r\n") - buffer.find("name=\"") - 6);
-            std::string attachment = buffer.substr(buffer.find("\r\n\r\n") + 4);
-            attachment = attachment.substr(0, attachment.find("\r\n\r\n"));
-
-            attachments[fileName] = attachment;
-            // buffer = buffer.substr(buffer.find(boundary));
-        } while (buffer.find(boundary) != std::string::npos && buffer.find("Content-Type:") != std::string::npos);
-    }
-    else
-    {
-        content = buffer.substr(buffer.find("\r\n\r\n") + 4);
-        content = content.substr(0, content.find("\r\n\r\n"));
-    }
+    content = ExtractText(buffer);
+    attachments = ExtractAttachments(buffer);
 }
 
 void Mail::SaveAttachment(size_t index, std::string path)
@@ -62,17 +30,26 @@ void Mail::SaveAttachment(size_t index, std::string path)
     fs::path filePath(path);
     if (fs::exists(path) && fs::is_directory(path))
     {
-        filePath = (path + "/" + attachments.begin()->first);
+        filePath = (path + "/" + attachments[index].first);
     }
 
-    std::ofstream out(filePath.string(), std::ios::binary);
+    std::ofstream out(filePath.string(), std::ios::binary | std::ios::out);
     std::vector<char> buffer;
-
-
-    out << attachments.begin()->second;
+    buffer = DecodeBase64(attachments[index].second);
+    out.write(buffer.data(), buffer.size());
     out.close();
+}
 
-
+void Mail::SaveAttachments(std::string path)
+{
+    if (!fs::exists(path) && !fs::is_directory(path))
+    {
+        fs::create_directory(path);
+    }
+    for (int i = 0; i < attachments.size(); i++)
+    {
+        SaveAttachment(i, path);
+    }
 }
 
 std::string Mail::EncodeBase64(const std::vector<char>& data)
@@ -88,31 +65,38 @@ std::string Mail::EncodeBase64(const std::vector<char>& data)
 std::vector<char> Mail::DecodeBase64(const std::string& encoded_string)
 {
     std::vector<char> decoded_data;
-    size_t size = detail::base64::decoded_size(encoded_string.size());
-    char* decoded = new char[size];
-    decoded_data.resize(size);
-
-    boost::beast::detail::base64::decode(decoded, encoded_string.c_str(), encoded_string.size());
-
-    decoded_data.insert(decoded_data.end(), decoded, decoded + size);
-    delete[] decoded;
-
+    std::stringstream ss(encoded_string);
+    std::string line;
+    while (std::getline(ss, line))
+    {
+        line = line.substr(0, line.find("\r"));
+        if (line == "")break;
+        size_t size = detail::base64::decoded_size(line.size());
+        char* decoded = new char[size] { 0 };
+        boost::beast::detail::base64::decode(decoded, line.c_str(), line.size());
+        decoded_data.insert(decoded_data.end(), decoded, decoded + size);
+        delete[] decoded;
+    }
+    if (decoded_data.back() == '\0')
+    {
+        decoded_data.pop_back();
+    }
     return decoded_data;
 }
 
 void Mail::Save(std::string mainPath)
 {
-    if (folder != "")
-    {
-        mainPath = mainPath + "/" + folder;
-    }
     std::ofstream out(mainPath + "/" + id + ".json");
     Json::Value root;
+    root["Id"] = id;
     root["From"] = user;
     root["Subject"] = subject;
     root["Content"] = content;
     root["Attachments"] = Json::Value(Json::arrayValue);
-    for (std::map<std::string, std::string>::iterator it = attachments.begin(); it != attachments.end(); it++)
+    root["IsSeen"] = isSeen;
+    root["Folder"] = folder;
+
+    for (auto it = attachments.begin(); it != attachments.end(); it++)
     {
         Json::Value attachment;
         attachment["Name"] = it->first;
@@ -123,11 +107,75 @@ void Mail::Save(std::string mainPath)
     out.close();
 }
 
+void Mail::Load(std::string path)
+{
+    std::ifstream in(path);
+    Json::Value root;
+    in >> root;
+    in.close();
+    id = root["Id"].asString();
+    user = root["From"].asString();
+    subject = root["Subject"].asString();
+    content = root["Content"].asString();
+    isSeen = root["IsSeen"].asBool();
+    folder = root["Folder"].asString();
+    for (size_t i = 0; i < root["Attachments"].size(); i++)
+    {
+        Json::Value attachment = root["Attachments"][(int)i];
+        std::pair<std::string, std::string> pair(attachment["Name"].asString(), attachment["Content"].asString());
+        attachments.push_back(pair);
+    }
+}
+
+// Function to extract text part from MIME message
+std::string Mail::ExtractText(const std::string& mimeMessage)
+{
+    // Simple implementation to extract text part between text/plain boundaries
+    size_t textStart = mimeMessage.find("Content-Type: text/plain");
+    if (textStart != std::string::npos)
+    {
+        size_t textEnd = mimeMessage.find("--", textStart + 1);
+        if (textEnd != std::string::npos)
+        {
+            size_t contentStart = mimeMessage.find("\r\n\r\n", textStart) + 4; // Find the start of content after the headers
+            return mimeMessage.substr(contentStart, textEnd - contentStart);
+        }
+        else
+        {
+            size_t contentStart = mimeMessage.find("\r\n\r\n", textStart) + 4; // Find the start of content after the headers
+            size_t contentEnd = mimeMessage.find_last_of(".\r\n") - 2;
+            return mimeMessage.substr(contentStart, contentEnd - contentStart);
+        }
+    }
+    return "";
+}
+
+// Function to extract attachments with file names from MIME message
+std::vector<std::pair<std::string, std::string>> Mail::ExtractAttachments(const std::string& mimeMessage)
+{
+    std::vector<std::pair<std::string, std::string>> attachments;
+    size_t attachmentStart = mimeMessage.find("Content-Disposition: attachment");
+    while (attachmentStart != std::string::npos)
+    {
+        size_t attachmentEnd = mimeMessage.find("--", attachmentStart + 1);
+        if (attachmentEnd != std::string::npos)
+        {
+            size_t contentStart = mimeMessage.find("\r\n\r\n", attachmentStart) + 4; // Find the start of content after the headers
+            size_t filenameStart = mimeMessage.find("filename=\"", attachmentStart) + 10;
+            size_t filenameEnd = mimeMessage.find("\r\n", filenameStart) - 1;
+            std::string filename = mimeMessage.substr(filenameStart, filenameEnd - filenameStart);
+            attachments.push_back(std::make_pair(filename, mimeMessage.substr(contentStart, attachmentEnd - contentStart - 2)));
+        }
+        attachmentStart = mimeMessage.find("Content-Disposition: attachment", attachmentEnd + 1);
+    }
+    return attachments;
+}
+
 
 std::ostream& operator<<(std::ostream& os, const Mail& mail)
 {
     os << "From: " << mail.user << std::endl;
     os << "Subject: " << mail.subject << std::endl;
-    os << "Content: " << mail.content << std::endl;
+    os << "Content: " << std::endl << mail.content << std::endl;
     return os;
 }
